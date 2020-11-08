@@ -35,7 +35,7 @@ private val primitiveArrayTypes = mapOf(
     BooleanArray::class to Boolean::class
 )
 
-internal fun KType.getKClass() = this.jvmErasure
+internal fun KType.getKClass(): KClass<*> = this.jvmErasure
 
 internal fun KType.getJavaClass(): Class<*> = this.getKClass().java
 

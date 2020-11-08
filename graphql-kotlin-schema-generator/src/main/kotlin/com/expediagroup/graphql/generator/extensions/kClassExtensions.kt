@@ -21,6 +21,8 @@ import com.expediagroup.graphql.generator.filters.functionFilters
 import com.expediagroup.graphql.generator.filters.propertyFilters
 import com.expediagroup.graphql.generator.filters.superclassFilters
 import com.expediagroup.graphql.hooks.SchemaGeneratorHooks
+import graphql.relay.Connection
+import graphql.relay.Edge
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
@@ -75,6 +77,10 @@ internal fun KClass<*>.isValidAdditionalType(inputType: Boolean): Boolean = !(in
 internal fun KClass<*>.isEnum(): Boolean = this.isSubclassOf(Enum::class)
 
 internal fun KClass<*>.isListType(): Boolean = this.isSubclassOf(List::class) || this.java.isArray
+
+internal fun KClass<*>.isConnectionType(): Boolean = this.isSubclassOf(Connection::class)
+
+internal fun KClass<*>.isEdgeType(): Boolean = this.isSubclassOf(Edge::class)
 
 @Throws(CouldNotGetNameOfKClassException::class)
 internal fun KClass<*>.getSimpleName(isInputClass: Boolean = false): String {

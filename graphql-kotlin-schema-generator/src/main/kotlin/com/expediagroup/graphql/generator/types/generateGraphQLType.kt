@@ -25,6 +25,8 @@ import com.expediagroup.graphql.generator.extensions.isListType
 import com.expediagroup.graphql.generator.extensions.isUnion
 import com.expediagroup.graphql.generator.extensions.wrapInNonNull
 import com.expediagroup.graphql.generator.state.TypesCacheKey
+import graphql.relay.Connection
+import graphql.relay.Edge
 import graphql.schema.GraphQLType
 import graphql.schema.GraphQLTypeReference
 import kotlin.reflect.KClass
@@ -34,8 +36,8 @@ import kotlin.reflect.KType
  * Return a basic GraphQL type given all the information about the kotlin type.
  */
 internal fun generateGraphQLType(generator: SchemaGenerator, type: KType, inputType: Boolean = false): GraphQLType {
-    val hookGraphQLType = generator.config.hooks.willGenerateGraphQLType(type)
-    val graphQLType = hookGraphQLType
+    val graphQLType = generateRelaySpecificGraphQLType(generator, type)
+        ?: generator.config.hooks.willGenerateGraphQLType(type)
         ?: generateScalar(generator, type)
         ?: objectFromReflection(generator, type, inputType)
 
@@ -48,6 +50,25 @@ internal fun generateGraphQLType(generator: SchemaGenerator, type: KType, inputT
 
     return typeWithNullability
 }
+
+private fun generateRelaySpecificGraphQLType(generator: SchemaGenerator, type: KType): GraphQLType? =
+    when (type.classifier) {
+        Edge::class, Connection::class ->
+            when (val cachedType = generator.relayCache.get(TypesCacheKey(type, false))) {
+                null -> getRelaySpecificObject(type, generator)
+                else -> when (type.classifier) {
+                    Connection::class -> cachedType.connection
+                    Edge::class -> cachedType.edge
+                    else -> null
+                }
+            }
+        else -> null
+    }
+
+private fun getRelaySpecificObject(type: KType, generator: SchemaGenerator): GraphQLType =
+    generator.relayCache.build(type, generator) {
+        generator.config.hooks.willAddGraphQLTypeToSchema(type, getGraphQLType(generator, type.getKClass(), false, type))
+    }
 
 private fun objectFromReflection(generator: SchemaGenerator, type: KType, inputType: Boolean): GraphQLType {
     val cacheKey = TypesCacheKey(type, inputType)

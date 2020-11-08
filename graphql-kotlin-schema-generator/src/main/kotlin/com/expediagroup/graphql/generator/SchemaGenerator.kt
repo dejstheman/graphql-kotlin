@@ -21,6 +21,7 @@ import com.expediagroup.graphql.TopLevelObject
 import com.expediagroup.graphql.exceptions.InvalidPackagesException
 import com.expediagroup.graphql.generator.state.AdditionalType
 import com.expediagroup.graphql.generator.state.ClassScanner
+import com.expediagroup.graphql.generator.state.RelayTypesCache
 import com.expediagroup.graphql.generator.state.TypesCache
 import com.expediagroup.graphql.generator.types.generateGraphQLType
 import com.expediagroup.graphql.generator.types.generateMutations
@@ -46,12 +47,13 @@ import kotlin.reflect.full.createType
  *
  * This class should be used from a try-with-resouces block
  * or another closable object as the internals can take up a lot of resources.
-*/
+ */
 open class SchemaGenerator(internal val config: SchemaGeneratorConfig) : Closeable {
 
     internal val additionalTypes: MutableSet<AdditionalType> = mutableSetOf()
     internal val classScanner = ClassScanner(config.supportedPackages)
     internal val cache = TypesCache(config.supportedPackages)
+    internal val relayCache = RelayTypesCache()
     internal val codeRegistry = GraphQLCodeRegistry.newCodeRegistry()
     internal val directives = ConcurrentHashMap<String, GraphQLDirective>()
 
